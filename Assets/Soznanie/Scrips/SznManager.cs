@@ -4,8 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-using UnityEngine;
 using AOT;
+
+using UnityEngine;
 
 namespace Soznanie
 {
@@ -71,12 +72,12 @@ namespace Soznanie
         }
         void HandleChainChanged(string data)
         {
-            var chainId = (ChainId)(int.Parse(data));
+            var chainId = (ChainId)Convert.ToInt32(data, 16);
             ChainChanged?.Invoke(chainId);
         }
         void HandleConnect(string data)
         {
-            var chainId = (ChainId)(int.Parse(data));
+            var chainId = (ChainId)Convert.ToInt32(data, 16);
             Connect?.Invoke(chainId);
         }
         void HandleDisconnect(string data)
@@ -132,16 +133,21 @@ namespace Soznanie
 
         private static void InvokeCallback(string name, string data)
         {
+            Debug.Log($"Invoke name: {name}, data: {data}");
+
             var jsonCallback = callbacks.Find(x => x.Name == name);
             InvokeCallback(jsonCallback, data);
         }
         private static void InvokeCallback(int hashCode, string data)
         {
+            Debug.Log($"Invoke hashCode: {hashCode}, data: {data}");
+
             var jsonCallback = callbacks.First(x => x.GetHashCode() == hashCode);
             InvokeCallback(jsonCallback, data);
         }
         private static void InvokeCallback(JsonCallback jsonCallback, string data)
         {
+            Debug.Log(jsonCallback.Name);
             jsonCallback.Callback?.Invoke(data);
 
             if (jsonCallback.Disposable)
@@ -151,6 +157,7 @@ namespace Soznanie
         [MonoPInvokeCallback(typeof(Action<string>))]
         private static void OnJsonCallbackHandler(string data)
         {
+            Debug.Log($"Data = {data}");
             var callbackData = JsonUtility.FromJson<JsonCallbackData>(data);
 
             if (string.IsNullOrEmpty(callbackData.Name))

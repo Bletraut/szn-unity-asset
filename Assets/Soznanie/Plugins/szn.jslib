@@ -1,7 +1,7 @@
 let sznPlugin = {
     
     $sznData: {
-        jsonCallbackHandler: null,
+        jsonCallbackHandler: 0,
 
         isInitiated: false,
 
@@ -15,14 +15,14 @@ let sznPlugin = {
                 HashCode: hashCode,
                 Data: data
             };
-            Runtime.dynCall("vi", this.jsonCallbackHandler, [this.strToUTF8(JSON.stringify(callbackObj))]);
+            dynCall_vi(sznData.jsonCallbackHandler, sznData.strToUTF8(JSON.stringify(callbackObj)));
         },
 
-        init: function (callback) {
-            this.jsonCallbackHandler = callback;
+        init: function (jsonCallback) {
+            this.jsonCallbackHandler = jsonCallback;
 
             if (this.hasMetamask) {
-                isInitiated = true;
+                this.isInitiated = true;
                 this.eth = window.ethereum;
 
                 this.initHandlers();
@@ -41,16 +41,17 @@ let sznPlugin = {
             let dataObj = {
                 Accounts: accounts,
             };
-            this.sendJsonCallback("OnAccountsChanged", 0, JSON.stringify(dataObj));
+            sznData.accounts = accounts;
+            sznData.sendJsonCallback("OnAccountsChanged", 0, JSON.stringify(dataObj));
         },
         handleChainChanged: function (chainId) {
-            this.sendJsonCallback("OnChainChanged", 0, chainId);
+            sznData.sendJsonCallback("OnChainChanged", 0, chainId);
         },
         handleConnect: function (connectInfo) {
-            this.sendJsonCallback("OnConnect", 0, connectInfo.chainId);
+            sznData.sendJsonCallback("OnConnect", 0, connectInfo.chainId);
         },
         handleDisconnect: function (error) {
-            this.sendJsonCallback("OnDisconnect", 0, "");
+            sznData.sendJsonCallback("OnDisconnect", 0, "");
         },
 
         hasMetamask: function () {
@@ -67,15 +68,15 @@ let sznPlugin = {
         },
     },
 
-    init: function () {
-        sznData.init();
+    init: function (jsonCallback) {
+        sznData.init(jsonCallback);
     },
 
     connectToWallet: function () {
         if (sznData.hasMetamask()) {
             sznData.eth = window.ethereum;
 
-            sznData.eth.request({ method: 'eth_accounts' })
+            sznData.eth.request({ method: "eth_requestAccounts" })
               .then(sznData.handleAccountsChanged)
               .catch((err) => {
                     sznData.sendJsonCallback("OnConnectionFailed", 0, "");

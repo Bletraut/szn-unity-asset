@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -7,16 +8,18 @@ namespace Soznanie
 {
     public partial class SznManager
     {
+        [Serializable]
         private struct AccountsData
         {
-            public List<string> Accounts { get; set; }
+            public List<string> Accounts;
         }
 
+        [Serializable]
         private struct JsonCallbackData
         {
-            public string Name { get; set; }
-            public int HashCode { get; set; }
-            public string Data { get; set; }
+            public string Name;
+            public int HashCode;
+            public string Data;
         }
     }
 }
