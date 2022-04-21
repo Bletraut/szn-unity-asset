@@ -21,11 +21,20 @@ let sznPlugin = {
         init: function (jsonCallback) {
             this.jsonCallbackHandler = jsonCallback;
 
-            if (this.hasMetamask) {
+            if (this.hasMetamask()) {
                 this.isInitiated = true;
                 this.eth = window.ethereum;
 
                 this.initHandlers();
+
+                ethereum.request({ method: 'eth_accounts' })
+                  .then(sznData.handleInitialized)
+                  .catch((err) => {
+                        sznData.sendJsonCallback("OnInitializationFailed", 0, "");
+                  });
+            }
+            else {
+                sznData.sendJsonCallback("OnInitializationFailed", 0, "");
             }
         },
 
@@ -37,6 +46,13 @@ let sznPlugin = {
         },
 
         // Event handlers
+        handleInitialized: function (accounts) {
+            let dataObj = {
+                Accounts: accounts,
+            };
+            sznData.accounts = accounts;
+            sznData.sendJsonCallback("OnInitialized", 0, JSON.stringify(dataObj));
+        },
         handleAccountsChanged: function (accounts) {
             let dataObj = {
                 Accounts: accounts,
@@ -55,7 +71,7 @@ let sznPlugin = {
         },
 
         hasMetamask: function () {
-            return window.ethereum != null;
+            return typeof window.ethereum !== 'undefined';
         },
 
         // Utils
@@ -76,20 +92,27 @@ let sznPlugin = {
         if (sznData.hasMetamask()) {
             sznData.eth = window.ethereum;
 
-            sznData.eth.request({ method: "eth_requestAccounts" })
-              .then(sznData.handleAccountsChanged)
-              .catch((err) => {
-                    sznData.sendJsonCallback("OnConnectionFailed", 0, "");
-              });
-
             if (!sznData.isInitiated)
             {
                 sznData.initHandlers();
             }
+
+            sznData.eth.request({ method: "eth_requestAccounts" })
+              .then(accounts => {
+                    sznData.eth.request({ method: 'eth_chainId' })
+                        .then(sznData.handleChainChanged);
+              })
+              .catch((err) => {
+                    sznData.sendJsonCallback("OnConnectionFailed", 0, "");
+              });
         }
         else {
             sznData.sendJsonCallback("OnConnectionFailed", 0, "");
         }
+    },
+
+    isMetamaskAvailable: function () {
+        return sznData.hasMetamask();
     },
 
     isConnected: function () {
