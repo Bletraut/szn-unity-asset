@@ -22,28 +22,72 @@ namespace Soznanie
         /// </summary>
         public static void ConnectToWallet() => connectToWallet();
 
+        private static bool repeatInitEvent;
+        private static List<string> initData;
+        private static Action<List<string>> initAction;
         /// <summary>
         /// SznManager emits this event when initialization is successful.
         /// </summary>
-        public static event Action<List<string>> Initialized;
+        public static event Action<List<string>> Initialized
+        {
+            add
+            {
+                initAction += value;
+                if (repeatInitEvent)
+                {
+                    repeatInitEvent = false;
+                    initAction.Invoke(initData);
+                }
+            }
+            remove => initAction -= value;
+        }
+        private static bool repeatInitFailedEvent;
+        private static Action initFaildedAction;
         /// <summary>
         /// SznManager emits this event when initialization is failed.
         /// <para>
         /// User need install Metamask. See <see cref="IsMetamaskAvailable"/> property.
         /// </para>
         /// </summary>
-        public static event Action InitializationFailed;
+        public static event Action InitializationFailed
+        {
+            add
+            {
+                initFaildedAction += value;
+                if (repeatInitFailedEvent)
+                {
+                    repeatInitFailedEvent = false;
+                    initFaildedAction.Invoke();
+                }
+            }
+            remove => initFaildedAction -= value;
+        }
         /// <summary>
         /// The MetaMask provider emits this event whenever 
         /// the return value of the eth_accounts RPC method changes. 
         /// Returns an array that is either empty or contains a single account address.
         /// </summary>
         public static event Action<List<string>> AccountsChanged;
+        private static bool repeatChainChangedEvent;
+        private static ChainId receivedChainId;
+        private static Action<ChainId> chainChangedAction;
         /// <summary>
         /// The MetaMask provider emits this event 
         /// when the currently connected chain changes.
         /// </summary>
-        public static event Action<ChainId> ChainChanged;
+        public static event Action<ChainId> ChainChanged
+        {
+            add
+            {
+                chainChangedAction += value;
+                if (repeatChainChangedEvent)
+                {
+                    repeatChainChangedEvent = false;
+                    chainChangedAction.Invoke(receivedChainId);
+                }
+            }
+            remove => chainChangedAction -= value;
+        }
         /// <summary>
         /// The MetaMask provider emits this event when 
         /// it first becomes able to submit RPC requests to a chain.
@@ -162,11 +206,20 @@ namespace Soznanie
         void HandleInitialized(string data)
         {
             var accounts = JsonUtility.FromJson<AccountsData>(getAccounts()).Accounts;
-            Initialized?.Invoke(accounts);
+            if (initAction == null)
+            {
+                initData = accounts;
+                repeatInitEvent = true;
+                repeatChainChangedEvent = accounts.Count > 0;
+            }
+            initAction?.Invoke(accounts);
         }
         void HandleInitializationFailed(string data)
         {
-            InitializationFailed?.Invoke();
+            if (initFaildedAction == null)
+                repeatInitFailedEvent = true;
+
+            initFaildedAction?.Invoke();
         }
         void HandleAccountsChanged(string data)
         {
@@ -176,7 +229,11 @@ namespace Soznanie
         void HandleChainChanged(string data)
         {
             var chainId = (ChainId)Convert.ToInt32(data, 16);
-            ChainChanged?.Invoke(chainId);
+            if (repeatChainChangedEvent)
+            {
+                receivedChainId = chainId;
+            }
+            chainChangedAction?.Invoke(chainId);
         }
         void HandleConnect(string data)
         {

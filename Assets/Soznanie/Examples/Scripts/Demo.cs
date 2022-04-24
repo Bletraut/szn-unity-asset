@@ -23,9 +23,11 @@ namespace Demo
         {
             testScreenObj.SetActive(false);
 
-            SznManager.ConnectionFailed += SznManager_ConnectionFailed;
+            SznManager.Initialized += OnAccountsChanged;
+            SznManager.InitializationFailed += OnInitializationFailed;
+
             SznManager.AccountsChanged += OnAccountsChanged;
-            SznManager.ChainChanged += SznManager_ChainChanged;
+            SznManager.ChainChanged += OnChainChanged;
         }
 
         private void Connected()
@@ -39,7 +41,7 @@ namespace Demo
             testScreenObj.SetActive(false);
         }
 
-        private void SznManager_ConnectionFailed()
+        private void OnInitializationFailed()
         {
             Debug.LogError("Install Metamask wallet and reload this page.");
         }
@@ -50,7 +52,7 @@ namespace Demo
             else Disconnected();
         }
 
-        private void SznManager_ChainChanged(ChainId chainId)
+        private void OnChainChanged(ChainId chainId)
         {
             chainErrorMessage.SetActive(chainId != ChainId.Ropsten);
         }

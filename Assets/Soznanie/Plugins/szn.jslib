@@ -28,13 +28,19 @@ let sznPlugin = {
                 this.initHandlers();
 
                 ethereum.request({ method: 'eth_accounts' })
-                  .then(sznData.handleInitialized)
+                  .then(accounts => {
+                        sznData.handleInitialized(accounts);
+                        if (accounts.length !== 0) {
+                            sznData.eth.request({ method: 'eth_chainId' })
+                                .then(sznData.handleChainChanged);
+                        }
+                  })
                   .catch((err) => {
                         sznData.sendJsonCallback("OnInitializationFailed", 0, "");
                   });
             }
             else {
-                sznData.sendJsonCallback("OnInitializationFailed", 0, "");
+                sznData.sendJsonCallback("OnInitializationFailed", 0, "")
             }
         },
 
