@@ -21,6 +21,39 @@ namespace Soznanie
         /// Connect SznManager to Metamask wallet.
         /// </summary>
         public static void ConnectToWallet() => connectToWallet();
+        /// <summary>
+        /// Gets all available game collections from the smart contract..
+        /// </summary>
+        public static void GetCollections(Action<List<CollectionData>> resultCallback)
+        {
+            var callbackData = CreateCallback("", true, data =>
+            {
+                resultCallback.Invoke(JsonUtility.FromJson<Collections>(data).CollectionDatas);
+            });
+            getCollections(callbackData.GetHashCode());
+        }
+        /// <summary>
+        /// Gets all available game items for user from the smart contract.
+        /// </summary>
+        public static void ItemsOf(string address, Action<List<ItemData>> resultCallback)
+        {
+            var callbackData = CreateCallback("", true, data =>
+            {
+                resultCallback.Invoke(JsonUtility.FromJson<Items>(data).ItemDatas);
+            });
+            itemsOf(address, callbackData.GetHashCode());
+        }
+        /// <summary>
+        /// Buys an available game item from the smart contract.
+        /// </summary>
+        public static void BuyItem(string collectionSymbol, Action<PurchaseData> purchaseCallback)
+        {
+            var callbackData = CreateCallback("", true, data =>
+            {
+                purchaseCallback.Invoke(JsonUtility.FromJson<PurchaseData>(data));
+            });
+            buyItem(collectionSymbol, callbackData.GetHashCode());
+        }
 
         private static bool repeatInitEvent;
         private static List<string> initData;
@@ -154,6 +187,10 @@ namespace Soznanie
         /// Returns an array that is either empty or contains a single account address.
         /// </summary>
         public static List<string> Accounts => JsonUtility.FromJson<AccountsData>(getAccounts()).Accounts;
+        /// <summary>
+        /// Returns a selected account address.
+        /// </summary>
+        public static string SelectedAccount => Accounts.FirstOrDefault();
 
         private static SznManager instance;
 
@@ -199,7 +236,7 @@ namespace Soznanie
             CreateCallback("OnDisconnect", false, HandleDisconnect);
             CreateCallback("OnConnectionFailed", false, HandleConnectionFailed);
 
-            init(OnJsonCallbackHandler);
+            init(contractAddress, OnJsonCallbackHandler);
         }
 
         // Event handlers
@@ -254,7 +291,7 @@ namespace Soznanie
     public partial class SznManager
     {
         [DllImport("__Internal")]
-        private static extern void init(Action<string> jsonCallback);
+        private static extern void init(string contractAddress, Action<string> jsonCallback);
 
         [DllImport("__Internal")]
         private static extern void connectToWallet();
@@ -267,6 +304,15 @@ namespace Soznanie
 
         [DllImport("__Internal")]
         private static extern bool isMetamaskAvailable();
+
+        [DllImport("__Internal")]
+        private static extern void getCollections(int jsonCallbackHash);
+
+        [DllImport("__Internal")]
+        private static extern void itemsOf(string address, int jsonCallbackHash);
+
+        [DllImport("__Internal")]
+        private static extern void buyItem(string collectionSymbol, int jsonCallbackHash);
     }
 
     // Callback's logic

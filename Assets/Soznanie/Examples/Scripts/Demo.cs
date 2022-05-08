@@ -61,5 +61,32 @@ namespace Demo
         {
             SznManager.ConnectToWallet();
         }
+
+        public void OnShopBtnPressed()
+        {
+            SznManager.GetCollections(collections =>
+            {
+                collections.ForEach(collection => Debug.Log(collection));
+            });
+        }
+
+        public void OnInventoryBtnPressed()
+        {
+            SznManager.ItemsOf(SznManager.SelectedAccount, items =>
+            {
+                items.ForEach(item => Debug.Log(item));
+            });
+        }
+
+        public void OnBuyBtnPressed()
+        {
+            if (string.IsNullOrEmpty(SznManager.SelectedAccount))
+                return;
+
+            SznManager.BuyItem("Gun_1", purchaseData =>
+            {
+                Debug.Log($"Error:{purchaseData.ErrorMessage}, TransactionHash: {purchaseData.TransactionHash}");
+            });
+        }    
     }
 }

@@ -21,5 +21,53 @@ namespace Soznanie
             public int HashCode;
             public string Data;
         }
+
+        [Serializable]
+        private struct Collections
+        {
+            public List<CollectionData> CollectionDatas;
+        }
+
+        [Serializable]
+        private struct Items
+        {
+            public List<ItemData> ItemDatas;
+        }
+    }
+
+    [Serializable]
+    public struct CollectionData
+    {
+        public string Symbol;
+        public string Type;
+        public float Price;
+        public string Contract;
+        public int TotalSupply;
+        public int ItemsOnSale;
+        public string ImageHash;
+
+        public override string ToString()
+        {
+            return @$"{{ Symbol:{Symbol}, Type: {Type}, Price: {Price}, Contract: {Contract}, TotalSupply:{TotalSupply}, ItemsOnSale{ItemsOnSale}, ImageHash:{ImageHash} }}";
+        }
+    }
+
+    [Serializable]
+    public struct ItemData
+    {
+        public CollectionData CollectionData;
+        public int MintNumber;
+
+        public override string ToString()
+        {
+            return $"{{ Collection symbol:{CollectionData.Symbol}, Collection type: {CollectionData.Type}, MintNumber:{MintNumber} }}";
+        }
+    }
+
+    [Serializable]
+    public struct PurchaseData
+    {
+        public string ErrorMessage;
+        public string TransactionHash;
     }
 }
