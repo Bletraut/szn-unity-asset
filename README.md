@@ -176,4 +176,4 @@ public void OnBuyBtnPressed()
 ```
 
 # 4. Примеры
-1. Более детальный пример с вы можете найти в папке [Examples](Assets/Soznanie/Examples/), которая прилагается к ассету.
+1. Более детальный пример вы можете найти в папке [Examples](Assets/Soznanie/Examples/), которая прилагается к ассету.
