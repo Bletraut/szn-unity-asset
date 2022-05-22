@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
+using TMPro;
+
 using Soznanie;
 
 namespace Demo
@@ -13,15 +15,29 @@ namespace Demo
         [SerializeField]
         GameObject connectScreenObj;
         [SerializeField]
-        GameObject testScreenObj;
+        GameObject menuScreenObj;
+        [SerializeField]
+        GameObject shopScreenObj;
+        [SerializeField]
+        GameObject inventoryScreenObj;
 
         [Header("Objects")]
         [SerializeField]
-        GameObject chainErrorMessage;
+        GameObject chainErrorMessageObj;
+        [SerializeField]
+        TMP_Text chainErrorMessageText;
+
+        [Header("Settings")]
+        [SerializeField]
+        ChainId targetChainId;
+
+        GameObject currentScreen;
 
         void Start()
         {
-            testScreenObj.SetActive(false);
+            CurrentScreen = connectScreenObj;
+
+            chainErrorMessageText.text = $"Please change net to {targetChainId}";
 
             SznManager.Initialized += OnAccountsChanged;
             SznManager.InitializationFailed += OnInitializationFailed;
@@ -32,13 +48,11 @@ namespace Demo
 
         private void Connected()
         {
-            connectScreenObj.SetActive(false);
-            testScreenObj.SetActive(true);
+            CurrentScreen = menuScreenObj;
         }
         private void Disconnected()
         {
-            connectScreenObj.SetActive(true);
-            testScreenObj.SetActive(false);
+            CurrentScreen = connectScreenObj;
         }
 
         private void OnInitializationFailed()
@@ -54,7 +68,7 @@ namespace Demo
 
         private void OnChainChanged(ChainId chainId)
         {
-            chainErrorMessage.SetActive(chainId != ChainId.Ropsten);
+            chainErrorMessageObj.SetActive(chainId != targetChainId);
         }
 
         public void OnConnectBtnPressed()
@@ -64,29 +78,33 @@ namespace Demo
 
         public void OnShopBtnPressed()
         {
-            SznManager.GetCollections(collections =>
-            {
-                collections.ForEach(collection => Debug.Log(collection));
-            });
+            CurrentScreen = shopScreenObj;
         }
 
         public void OnInventoryBtnPressed()
         {
-            SznManager.ItemsOf(SznManager.SelectedAccount, items =>
-            {
-                items.ForEach(item => Debug.Log(item));
-            });
+            CurrentScreen = inventoryScreenObj;
         }
-
-        public void OnBuyBtnPressed()
+        
+        public void OnBackBtnPressed()
         {
-            if (string.IsNullOrEmpty(SznManager.SelectedAccount))
-                return;
-
-            SznManager.BuyItem("Gun_1", purchaseData =>
+            CurrentScreen = menuScreenObj;
+        }
+        
+        GameObject CurrentScreen
+        {
+            get => currentScreen;
+            set
             {
-                Debug.Log($"Error:{purchaseData.ErrorMessage}, TransactionHash: {purchaseData.TransactionHash}");
-            });
-        }    
+                if (currentScreen != value)
+                {
+                    if (currentScreen != null)
+                        currentScreen.SetActive(false);
+
+                    currentScreen = value;
+                    currentScreen.SetActive(true);
+                }
+            }
+        }
     }
 }

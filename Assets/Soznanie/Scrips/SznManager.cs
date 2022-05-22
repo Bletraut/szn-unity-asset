@@ -7,12 +7,15 @@ using System.Runtime.InteropServices;
 using AOT;
 
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Soznanie
 {
     // Unity methods
     public partial class SznManager : MonoBehaviour
     {
+        private static readonly string PinataUrl = "https://soznanie.mypinata.cloud/ipfs/";
+
         /// <summary>
         /// Init SznManager.
         /// </summary>
@@ -53,6 +56,17 @@ namespace Soznanie
                 purchaseCallback.Invoke(JsonUtility.FromJson<PurchaseData>(data));
             });
             buyItem(collectionSymbol, callbackData.GetHashCode());
+        }
+        /// <summary>
+        /// Gets the image of the item from Ipfs.
+        /// </summary>
+        public static void GetItemImage(string imageHash, Action<ImageResponseData> resultCallback)
+        {
+            if (!IsInitialized)
+                throw new Exception("SznManager must be initialized.");
+
+            var imageUrl = $"{PinataUrl}{imageHash}";
+            instance.DownloadImage(imageUrl, resultCallback);
         }
 
         private static bool repeatInitEvent;
@@ -237,6 +251,25 @@ namespace Soznanie
             CreateCallback("OnConnectionFailed", false, HandleConnectionFailed);
 
             init(contractAddress, OnJsonCallbackHandler);
+        }
+
+        private void DownloadImage(string imageUrl, Action<ImageResponseData> resultCallback)
+        {
+            StartCoroutine(DownloadImageCor(imageUrl, resultCallback));
+        }
+        private IEnumerator DownloadImageCor(string imageUrl, Action<ImageResponseData> resultCallback)
+        {
+            var imageRequestData = new ImageResponseData();
+
+            UnityWebRequest request = UnityWebRequestTexture.GetTexture(imageUrl);
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError)
+               imageRequestData.ErrorMessage = request.error;
+            else
+               imageRequestData.Texture2D = ((DownloadHandlerTexture)request.downloadHandler).texture;
+
+            resultCallback?.Invoke(imageRequestData);
         }
 
         // Event handlers

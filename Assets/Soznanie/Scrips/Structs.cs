@@ -69,5 +69,18 @@ namespace Soznanie
     {
         public string ErrorMessage;
         public string TransactionHash;
+
+        public bool HasError => !IsSuccessed;
+        public bool IsSuccessed => string.IsNullOrEmpty(ErrorMessage);
+    }
+
+    [Serializable]
+    public struct ImageResponseData
+    {
+        public string ErrorMessage;
+        public Texture2D Texture2D;
+
+        public bool HasError => !IsSuccessed;
+        public bool IsSuccessed => string.IsNullOrEmpty(ErrorMessage);
     }
 }
